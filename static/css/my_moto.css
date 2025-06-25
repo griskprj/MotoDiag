@@ -1,0 +1,299 @@
+/* Страница обслуживания */
+.maintenance-section {
+    margin-bottom: 30px;
+}
+
+.filters {
+    display: flex;
+    gap: 15px;
+}
+
+.filter-select {
+    padding: 10px 15px;
+    background: rgba(125, 60, 255, 0.1);
+    border: 1px solid rgba(125, 60, 255, 0.2);
+    border-radius: 8px;
+    color: var(--text-main);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-select:hover {
+    background: rgba(125, 60, 255, 0.2);
+}
+
+.history-section {
+    margin-bottom: 30px;
+}
+
+.history-list {
+    display: grid;
+    gap: 12px;
+}
+
+.history-item {
+    background: linear-gradient(145deg, rgba(26,15,47,0.6), rgba(58,43,86,0.3));
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid rgba(125, 60, 255, 0.1);
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.history-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    border-color: rgba(125, 60, 255, 0.3);
+}
+
+.history-main {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.history-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(125, 60, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.history-details h4 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+
+.history-details p {
+    color: #C0B5D6;
+    font-size: 0.85rem;
+}
+
+.history-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+}
+
+.history-meta .mileage {
+    font-size: 0.9rem;
+    color: var(--accent-cyan);
+}
+
+.history-meta .cost {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem;
+}
+
+.no-history {
+    text-align: center;
+    padding: 30px;
+    color: #666;
+    background: linear-gradient(145deg, rgba(26,15,47,0.6), rgba(58,43,86,0.3));
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    border: 1px dashed rgba(125, 60, 255, 0.3);
+}
+
+.quick-add-section {
+    margin-bottom: 30px;
+}
+
+.quick-add-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.quick-add-btn {
+    padding: 15px;
+    background: linear-gradient(145deg, rgba(26,15,47,0.6), rgba(58,43,86,0.3));
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    border: 1px solid rgba(125, 60, 255, 0.1);
+    color: var(--text-main);
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.quick-add-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    border-color: rgba(125, 60, 255, 0.3);
+}
+
+.quick-add-btn svg {
+    stroke: var(--accent-purple);
+}
+
+/* Адаптация для мобильных */
+@media (max-width: 768px) {
+    .filters {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .filter-select {
+        width: 100%;
+    }
+    
+    .history-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .history-meta {
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+    
+    .quick-add-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .quick-add-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Модальное окно */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(10, 4, 26, 0.8);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-container {
+    background: linear-gradient(145deg, rgba(26,15,47,0.95), rgba(58,43,86,0.9));
+    border-radius: 16px;
+    border: 1px solid rgba(125, 60, 255, 0.3);
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid rgba(125, 60, 255, 0.2);
+}
+
+.modal-header h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.2rem;
+    margin: 0;
+    background: linear-gradient(45deg, var(--text-main), #C0B5D6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    color: #C0B5D6;
+    font-size: 24px;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close-modal:hover {
+    color: var(--text-main);
+}
+
+.modal-form {
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #C0B5D6;
+    font-size: 0.9rem;
+}
+
+.form-group select,
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    background: rgba(10, 4, 26, 0.4);
+    border: 1px solid rgba(125, 60, 255, 0.2);
+    border-radius: 8px;
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.form-group select:focus,
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--accent-purple);
+    box-shadow: 0 0 0 2px rgba(125, 60, 255, 0.2);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.modal-form .btn {
+    width: 100%;
+    margin-top: 10px;
+}
+
+/* Адаптация для мобильных */
+@media (max-width: 480px) {
+    .modal-container {
+        max-width: 100%;
+    }
+    
+    .modal-header {
+        padding: 15px;
+    }
+    
+    .modal-form {
+        padding: 15px;
+    }
+}

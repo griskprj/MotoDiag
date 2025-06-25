@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- PWA -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FlaskApp">
+    <link rel="apple-touch-icon" href="/static/ico_192.png">
+
+    <!-- Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    
+    <title>MotoDiag - Добавление мотоцикла</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+         :root {
+            --bg-primary: #0A041A;
+            --bg-secondary: #1A0F2F;
+            --accent-purple: #7D3CFF;
+            --accent-cyan: #00F0FF;
+            --text-main: #FFFFFF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: url('https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=2070&auto=format&fit=crop') no-repeat center/cover;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(10, 4, 26, 0.9) 0%, rgba(26, 15, 47, 0.8) 100%);
+            z-index: -1;
+        }
+
+        .onboarding-container {
+            background: linear-gradient(145deg, rgba(26, 15, 47, 0.7), rgba(58, 43, 86, 0.4));
+            backdrop-filter: blur(16px);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            height: 700px;
+            border: 1px solid rgba(125, 60, 255, 0.2);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            color: var(--text-main);
+            font-size: 1.8rem;
+            letter-spacing: -0.5px;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .step {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .step.active {
+            background: var(--accent-cyan);
+            transform: scale(1.3);
+        }
+
+        .form-steps {
+            position: relative;
+            min-height: 350px;
+        }
+
+        .step-form {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 0 10px;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+            pointer-events: none;
+        }
+
+        .step-form.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: all;
+        }
+
+        .step-form.leaving {
+            transform: translateX(-100%);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            color: var(--accent-cyan);
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(125, 60, 255, 0.1);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 0 3px rgba(125, 60, 255, 0.2);
+        }
+
+        .photo-upload {
+            border: 2px dashed rgba(125, 60, 255, 0.3);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .photo-upload:hover {
+            border-color: var(--accent-purple);
+            background: rgba(125, 60, 255, 0.05);
+        }
+
+        .photo-upload-icon {
+            font-size: 3rem;
+            color: var(--accent-purple);
+            margin-bottom: 15px;
+        }
+
+        .photo-upload-text {
+            color: var(--text-main);
+            margin-bottom: 5px;
+        }
+
+        .photo-upload-hint {
+            color: #C0B5D6;
+            font-size: 0.9rem;
+        }
+
+        .preview-photo {
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            max-height: 200px;
+            object-fit: cover;
+        }
+
+        .btn-cont {
+            width: 100%;
+            height: 30px;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            }
+
+        .btn {
+            padding: 14px 28px;
+            background: linear-gradient(45deg, var(--accent-purple), #9D50FF);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(125, 60, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--accent-purple);
+            margin-right: 15px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(125, 60, 255, 0.1);
+        }
+
+        .navigation-buttons {
+            display: flex;
+            justify-content: center;
+        }
+
+        #step-1 .navigation-buttons {
+            margin-top: 80px;
+        }
+
+        #step2 .navigation-buttons {
+            margin-top: 20px;
+        }
+
+        .confirmation-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(125, 60, 255, 0.1);
+        }
+
+        .confirmation-label {
+            color: #C0B5D6;
+        }
+
+        .confirmation-value {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-wrapper::after {
+            content: '▼';
+            position: absolute;
+            top: 50%;
+            right: 15px;
+            transform: translateY(-50%);
+            color: var(--accent-purple);
+            font-size: 0.8rem;
+            pointer-events: none;
+        }
+
+        select.form-input {
+            appearance: none;
+            padding-right: 40px;
+            background: rgba(58, 43, 86, 0.7);
+            transition: 0.5;
+        }
+
+        .step-form {
+            transition: all 0.3s ease;
+            position: absolute;
+            width: 100%;
+        }
+
+        .step-form.leaving {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        .step-form.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .replace-photo-container {
+            text-align: center;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+
+        #replace-photo-btn {
+            padding: 10px 15px;
+            font-size: 0.9rem;
+        }
+
+        .scroll-form {
+        height: 500px; 
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 10px;
+    }
+
+    .scroll-form::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .scroll-form::-webkit-scrollbar-track {
+        background: rgba(125, 60, 255, 0.1);
+        border-radius: 3px;
+    }
+
+    .scroll-form::-webkit-scrollbar-thumb {
+        background: var(--accent-purple);
+        border-radius: 3px;
+    }
+
+    
+    .onboarding-container {
+        height: auto; 
+        min-height: 700px; 
+        padding: 30px; 
+    }
+
+    
+    .form-steps {
+        min-height: 500px;
+        position: relative;
+    }
+
+    @media (max-width: 768px) {
+        .onboarding-container {
+            padding: 20px;
+            min-height: 90vh;
+        }
+        
+        .scroll-form {
+            height: 400px;
+        }
+    }
+    </style>
+</head>
+<body>
+    <div class="onboarding-container">
+        <div class="logo">
+            <h2>Добавьте мотоцикл</h2>
+            
+        </div>
+
+        <div class="step-indicator">
+            <div class="step active" data-step="1"></div>
+            <div class="step" data-step="2"></div>
+            <div class="step" data-step="3"></div>
+        </div>
+        
+        <div class="scroll-form">
+            <form id="moto-form" method="POST" enctype="multipart/form-data" action="/add_motorcycle">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-steps">
+                    <!-- Шаг 1: Фото и модель -->
+                    <div class="step-form active" id="step-1">
+                        <div class="photo-upload" id="photo-upload">
+                            <div class="photo-upload-icon">📷</div>
+                            <div class="photo-upload-text">Добавьте фото мотоцикла</div>
+                            <div class="photo-upload-hint">Нажмите для загрузки или перетащите фото</div>
+                        </div>
+                        <input type="file" id="photo-input" name="moto_image" accept="image/*" style="display: none;">
+                        <img src="" alt="Preview" class="preview-photo" id="preview-photo">
+                        <div class="replace-photo-container" id="replace-photo-container" style="display: none;">
+                            <button type="button" class="btn btn-secondary" id="replace-photo-btn">Заменить фото</button>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="model">Модель мотоцикла</label>
+                            <input type="text" id="model" name="model" class="form-input" placeholder="Например: Yamaha MT-07" required>
+                        </div>
+    
+                        <div class="navigation-buttons">
+                            <div class="btn-cont">
+                                {% if user.first_reg == 0 %}
+                                <button type="button" class="btn btn-secondary" id="cancel-btn-step1">Отмена</button>
+                                {% endif %}
+                                <button class="btn" onclick="nextStep(1, 2)">Далее</button>
+                            </div>
+                        </div>
+                    </div>
+    
+                    <!-- Шаг 2: Детали -->
+                    <div class="step-form" id="step-2">
+                        <div class="form-group">
+                            <label class="form-label" for="year">Год выпуска</label>
+                            <input type="number" id="year" name="year" class="form-input" placeholder="2020" min="1900" max="2025" required>
+                        </div>
+    
+                        <div class="form-group">
+                            <label class="form-label" for="mileage">Пробег (км)</label>
+                            <input type="number" id="mileage" name="mileage" class="form-input" placeholder="15000" min="0" required>
+                        </div>
+    
+                        <div class="form-group">
+                            <label class="form-label" for="engine">Объем двигателя (см³)</label>
+                            <input type="number" id="engine" name="engine" class="form-input" placeholder="689" min="50" required>
+                        </div>
+    
+                        <div class="form-group">
+                            <label class="form-label" for="type">Тип мотоцикла</label>
+                            <div class="select-wrapper">
+                                <select id="type" name="type" class="form-input" required>
+                                    <option value="" disabled selected>Выберите тип</option>
+                                    <option value="sport">Спортивный</option>
+                                    <option value="naked">Нейкед</option>
+                                    <option value="cruiser">Круизер</option>
+                                    <option value="enduro">Эндуро</option>
+                                    <option value="touring">Туристический</option>
+                                    <option value="other">Другой</option>
+                                </select>
+                            </div>
+                        </div>
+    
+                        <div class="form-group">
+                            <label class="form-label" for="drive_type">Тип привода</label>
+                            <div class="select-wrapper">
+                                <select name="drive_type" id="drive_type" class="form-input" required>
+                                    <option value="" disabled selected>Выберите тип привода</option>
+                                    <option value="chain">Цепь</option>
+                                    <option value="belt">Ремень</option>
+                                    <option value="shaft">Кардан</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="nav-btn-wrapper" style="display: flex; flex-direction: column;">
+                            <div class="navigation-buttons" style="margin-bottom: 30px;">
+                                <button class="btn btn-secondary" onclick="prevStep(2, 1)">Назад</button>
+                                <button class="btn" onclick="nextStep(2, 3)">Далее</button>
+                            </div>
+                            <div class="navigation-buttons">
+                                {% if user.first_reg == 0 %}
+                                <button type="button" class="btn btn-secondary" id="cancel-btn-step2" style="margin-right: 15px;">Отмена</button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+    
+                    <!-- Шаг 3: Подтверждение -->
+                    <div class="step-form" id="step-3">
+                        <div class="confirmation-item">
+                            <span class="confirmation-label">Фото:</span>
+                            <span class="confirmation-value" id="confirm-photo">Не загружено</span>
+                        </div>
+                        <div class="confirmation-item">
+                            <span class="confirmation-label">Модель:</span>
+                            <span class="confirmation-value" id="confirm-model"></span>
+                        </div>
+                        <div class="confirmation-item">
+                            <span class="confirmation-label">Год выпуска:</span>
+                            <span class="confirmation-value" id="confirm-year"></span>
+                        </div>
+                        <div class="confirmation-item">
+                            <span class="confirmation-label">Пробег:</span>
+                            <span class="confirmation-value" id="confirm-mileage"></span>
+                        </div>
+                        <div class="confirmation-item">
+                            <span class="confirmation-label">Объем двигателя:</span>
+                            <span class="confirmation-value" id="confirm-engine"></span>
+                        </div>
+                        <div class="confirmation-item">
+                            <span class="confirmation-label">Тип привода:</span>
+                            <span class="confirmation-value" id="confirm-drive-type"></span>
+                        </div>
+                        <div class="confirmation-item">
+                            <span class="confirmation-label">Тип:</span>
+                            <span class="confirmation-value" id="confirm-type"></span>
+                        </div>
+    
+
+                        <div class="nav-btn-wrapper" style="display: flex; flex-direction: column; margin-top: 24px;">
+                            <div class="navigation-buttons">
+                                {% if user.first_reg == 0 %}
+                                <button type="button" class="btn btn-secondary" id="cancel-btn-step3" style="margin-right: 15px;">Отмена</button>
+                                {% endif %}
+                                <button type="button" class="btn" id="confirm-btn">Подтвердить</button>
+                            </div>
+                            <div class="navigation-buttons" style="margin-top: 24px;">
+                                <button class="btn btn-secondary" onclick="prevStep(3, 2)">Назад</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <script src="/static/js/add_moto_info.js"></script>
+</body>
+</html>

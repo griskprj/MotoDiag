@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- PWA -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FlaskApp">
+    <link rel="apple-touch-icon" href="/static/ico_192.png">
+
+    <!-- Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+
+    <title>MotoDiag - Главная</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/index.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">MotoDiag</div>
+                
+                <!-- Burger Menu Button (Mobile) -->
+                <div class="burger-menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                
+                <!-- Desktop Navigation -->
+                <nav>
+                    <ul>
+                        <li><a href="/index" class="active">Главная</a></li>
+                        <li><a href="/my_moto">Мои мотоциклы</a></li>
+                        <li><a href="/maintenance">Обслуживание</a></li>
+                        <li><a href="#">Статистика</a></li>
+                        <li><a href="/articles">База знаний</a></li>
+                    </ul>
+                </nav>
+                
+                <div>
+                    <a href="/profile" style="text-decoration: none;">
+                        {% if user.image %}
+                        <img src="{{ url_for('user_image', user_id=user.id )}}" class="user-avatar">
+                        {% else %}
+                        <img src="/static/image/profile_default.jpg" alt="" class="user-avatar">
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu (Hidden by default) -->
+        <div class="mobile-menu">
+            <ul>
+                <li><a href="/index" class="active">Главная</a></li>
+                <li><a href="/my_moto">Мои мотоциклы</a></li>
+                <li><a href="/maintenance">Обслуживание</a></li>
+                <li><a href="#">Статистика</a></li>
+                <li><a href="/articles">База знаний</a></li>
+            </ul>
+        </div>
+        
+        <!-- Overlay (Hidden by default) -->
+        <div class="overlay"></div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <!-- Приветственный блок -->
+            <section class="welcome-section">
+                <h1 class="welcome-title">Добро пожаловать в ваш гараж</h1>
+                <p class="welcome-text">MotoDiag помогает следить за состоянием ваших мотоциклов, напоминает о техническом обслуживании и сохраняет всю историю ремонтов в одном месте.</p>
+                <a href="/add_moto_info" class="btn">Добавить мотоцикл</a>
+            </section>
+
+            <!-- Статистика -->
+            <section class="stats-section">
+                <div class="stat-card">
+                    <div class="stat-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 20V10M18 20V4M6 20V16" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Общий пробег
+                    </div>
+                    <div class="stat-value">{{ total_mileage }}</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M 2 2 L 4 1 L 6 1 L 8 2 L 9 4 L 9 6 L 8 8 L 6 9 L 4 9 L 2 8 L 1 6 L 1 4 L 2 2 M 2 4 L 3 3 L 4 2 L 6 2 L 8 4 L 8 6 L 6 8 L 4 8 L 2 6 L 2 4" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M15 12C15 13.6569 13.6569 15 12 15C10.3431 15 9 13.6569 9 12C9 10.3431 10.3431 9 12 9C13.6569 9 15 10.3431 15 12Z" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Состояние
+                    </div>
+                    <div class="stat-value">
+                        <div class="status-indicator status-{{ avg_condition }}" style="font-size: 24px;">
+                            <div class="status-dot"></div>
+                            {{ avg_condition }}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Мотоциклы -->
+            <section class="bikes-section">
+                <h2 class="section-title">Мои мотоциклы</h2>
+                <div class="bikes-grid">
+                    {% for moto in moto_data %}
+                    <a href="/moto/{{ moto.id }}">
+                        <div class="bike-card">
+                            <img src="{{ url_for('moto_image', moto_id=moto.id) }}" 
+                                alt="{{ moto.model }}"
+                                class="moto-image">
+                            <h3>{{ moto.model }}</h3>
+                            <div class="bike-info">
+                                <span>{{ moto.year }} год</span>
+                                <span>{{ moto.mileage}} км</span>
+                                <span>{{ moto.engine}} см³</span>
+                                <span>
+                                    {% if moto.drive_type == "chain" %}Цепь
+                                    {% elif moto.drive_type == "belt" %}Ремень
+                                    {% elif moto.drive_type == "shaft" %}Кардан
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="bike-status">
+                                <div class="status-indicator status-{{ moto.condition }}">
+                                    <div class="status-dot"></div>
+                                    {{ moto.condition }}
+                                </div>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 18L15 12L9 6" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <!-- Предстоящее обслуживание -->
+            <section class="maintenance-section">
+                <h2 class="section-title">Предстоящее обслуживание</h2>
+                <div class="maintenance-list">
+                    {% for item in upcoming_maintenance %}
+                    <div class="maintenance-item {% if item.remaining_km < 0 %}minus{% endif %}" 
+                        data-moto-id="{{ item.moto_id }}" 
+                        data-service-type="{{ item.name }}">
+                        <div class="maintenance-info">
+                            <h4>{{ item.name }}</h4>
+                            <p>{{ item.moto_model }} • {{ item.interval }}</p>
+                        </div>
+                        <div class="maintenance-date">
+                            <div class="date">{% if item.remaining_km < 0 %}Просрочено на {{ item.remaining_km * -1 }} км {% else %}Через {{ item.remaining_km }} км{% endif %}</div>
+                            <div class="remaining">~{% if item.remaining_km < 0 %} {{ item.remaining_days * -1}} дней {% else %}{{ item.remaining_days }} дней{% endif %}</div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="no-maintenance">
+                        <p>Нет предстоящего обслуживания</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="copyright">© 2025 MotoDiag. Все права защищены.</div>
+                <div class="footer-links">
+                    <a href="#">Политика конфиденциальности</a>
+                    <a href="#">Условия использования</a>
+                    <a href="#">Контакты</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/burger-menu.js"></script>
+</body>
+</html>

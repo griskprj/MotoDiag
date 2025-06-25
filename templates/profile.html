@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MotoDiag - Профиль</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/index.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">MotoDiag</div>
+                
+                <!-- Burger Menu Button (Mobile) -->
+                <div class="burger-menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                
+                <!-- Desktop Navigation -->
+                <nav>
+                    <ul>
+                        <li><a href="/index">Главная</a></li>
+                        <li><a href="/my_moto">Мои мотоциклы</a></li>
+                        <li><a href="/maintenance">Обслуживание</a></li>
+                        <li><a href="#">Статистика</a></li>
+                        <li><a href="/articles">База знаний</a></li>
+                    </ul>
+                </nav>
+                
+                <div>
+                    <a href="/profile" style="text-decoration: none;">
+                        {% if user.image %}
+                        <img src="{{ url_for('user_image', user_id=user.id )}}" class="user-avatar">
+                        {% else %}
+                        <img src="/static/image/profile_default.jpg" alt="" class="user-avatar">
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu (Hidden by default) -->
+        <div class="mobile-menu">
+            <ul>
+                <li><a href="/index">Главная</a></li>
+                <li><a href="/my_moto">Мои мотоциклы</a></li>
+                <li><a href="/maintenance">Обслуживание</a></li>
+                <li><a href="#">Статистика</a></li>
+                <li><a href="/articles">База знаний</a></li>
+            </ul>
+        </div>
+        
+        <!-- Overlay (Hidden by default) -->
+        <div class="overlay"></div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <!-- Заголовок страницы -->
+            <h1 class="page-title">Мой профиль</h1>
+            
+            <!-- Основная информация -->
+            <section class="welcome-section">
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        <div>
+                            {% if user.image %}
+                            <img src="{{ url_for('user_image', user_id=user.id )}}" class="user-avatar-large">
+                            {% else %}
+                            <img src="/static/image/profile_default.jpg" alt="" class="user-avatar-large" id="avatar-preview">
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="profile-info">
+                        <h2 class="welcome-title">{{ user.username }}</h2>
+                        <p class="welcome-text">Участник с {{ user.join_date.strftime('%d.%m.%Y') }}</p>
+                        
+                        <div class="profile-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">{{ moto_count }}</div>
+                                <div class="stat-title">Мотоциклов</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">{{ maintenance_count }}</div>
+                                <div class="stat-title">Записей ТО</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">{{ total_mileage }} км</div>
+                                <div class="stat-title">Общий пробег</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Настройки профиля -->
+            <section class="profile-section">
+                <h2 class="section-title" style="margin-bottom: 24px;">Настройки профиля</h2>
+                
+                <form class="profile-form" id="profile-form" enctype="multipart/form-data">
+                    <div class="user-info-wrapper">
+                        <div class="profile-avatar">
+                            <div>
+                                {% if user.image %}
+                                <img src="{{ url_for('user_image', user_id=user.id )}}" class="user-avatar-large" id="avatar-preview">
+                                {% else %}
+                                <img src="/static/image/profile_default.jpg" alt="" class="user-avatar-large" id="avatar-preview">
+                                {% endif %}
+                            </div>
+                            <input type="file" id="avatar-upload" name="avatar" accept="image/*" style="display: none;">
+                            <button type="button" class="btn btn-secondary" style="margin-top: 15px;" onclick="document.getElementById('avatar-upload').click()">Изменить фото</button>
+                        </div>
+                        
+                        <div class="user-info">
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label for="username">Имя пользователя</label>
+                                <input type="text" id="username" name="username" value="{{ user.username }}" class="form-input" required>
+                            </div>
+        
+                            <div class=""></div>
+                            
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" value="{{ user.email }}" class="form-input" required>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">Сохранить изменения</button>
+                </form>
+            </section>
+            
+            <!-- Безопасность -->
+            <section class="profile-section">
+                <h2 class="section-title">Безопасность</h2>
+                
+                <div class="security-actions">
+                    <button class="btn btn-secondary" id="change-password-btn">Изменить пароль</button>
+                </div>
+            </section>
+            
+            <!-- Опасная зона -->
+            <section class="profile-section danger-zone">
+                <h2 class="section-title">Опасная зона</h2>
+                
+                <div class="danger-buttons" style="display: flex; gap: 24px;">
+                    <div class="danger-actions">
+                        <button type="submit" class="btn btn-secondary" id="delete-account-btn">Удалить аккаунт</button>
+                    </div>
+                    <div class="danger-actions">
+                        <button type="submit" class="btn btn-secondary" id="reset-password-btn">Сбросить пароль</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="copyright">© 2025 MotoDiag. Все права защищены.</div>
+                <div class="footer-links">
+                    <a href="#">Политика конфиденциальности</a>
+                    <a href="#">Условия использования</a>
+                    <a href="#">Контакты</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Модальное окно для смены пароля -->
+    <div class="modal-overlay" id="password-modal" style="display: none;">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Изменение пароля</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            
+            <form class="modal-form" id="password-form">
+                <div class="form-group">
+                    <label for="current-password">Текущий пароль</label>
+                    <input type="password" id="current-password" name="current_password" required class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="new-password">Новый пароль</label>
+                    <input type="password" id="new-password" name="new_password" required class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirm-password">Подтвердите новый пароль</label>
+                    <input type="password" id="confirm-password" name="confirm_password" required class="form-input">
+                </div>
+                
+                <button type="submit" class="btn">Изменить пароль</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/burger-menu.js"></script>
+    <script>
+        // Обработка кнопки смены пароля
+        document.getElementById('change-password-btn').addEventListener('click', function() {
+            document.getElementById('password-modal').style.display = 'flex';
+        });
+        
+        // Закрытие модального окна
+        document.querySelector('.close-modal').addEventListener('click', function() {
+            document.getElementById('password-modal').style.display = 'none';
+        });
+
+        //Удаление аккаунта
+        const deleteBtn = document.getElementById('delete-account-btn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', async function() {
+                if (confirm('Вы уверены, что хотите удалить аккаунт? Все данные будут удалены')) {
+                    try {
+                        const response = await fetch('/profile', {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRFToken': '{{ csrf_token() }}',
+                                'Content-Type': 'application/json',
+                            },
+                        });
+                        
+                        const result = await response.json();
+
+                        if (result.success) {
+                            alert('Ваш аккаунт был успешно удален');
+                            window.location.href = '/register';
+                        } else {
+                            alert('Ошибка: ' + (result.message || 'Не удалось удалить аккаунт'));
+                        }
+                    } catch (error) {
+                        console.error('Ошибка:', error);
+                        alert('Произошла ошибка при отправке данных');
+                    }
+                }
+            });
+        }
+
+        document.getElementById('password-form').addEventListener('submit', async function(e){
+            e.preventDefault();
+
+            const formData = new FormData(this);
+
+            try {
+                const response = await fetch('/change_password', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token() }}',
+                    },
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Пароль успешно изменен!');
+                    window.location.reload();
+                } else {
+                    alert('Ошибка: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Ошибка', error);
+                alert('Произошла ошибка при отправке данных');
+            }
+        });
+
+        document.getElementById('profile-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch('/profile', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token() }}',
+                    },
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Данные успешно обновлены!');
+                    window.location.reload();
+                } else {
+                    alert('Ошибка: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Произошла ошибка при отправке данных');
+            }
+        });
+
+        // Обработка загрузки аватарки
+        document.getElementById('avatar-upload').addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    document.getElementById('avatar-preview').src = e.target.result;
+                }
+                
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+
+        // Обработка кнопки сброса пароля
+        document.getElementById('reset-password-btn').addEventListener('click', async function() {
+            if (confirm('Отправить ссылку для сброса пароля на ваш email?')) {
+                try {
+                    const response = await fetch('/request_password_reset', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json',
+                        },
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert(result.message);
+                    } else {
+                        alert('Ошибка: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Ошибка:', error);
+                    alert('Произошла ошибка при отправке запроса');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

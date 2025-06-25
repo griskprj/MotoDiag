@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- PWA -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FlaskApp">
+    <link rel="apple-touch-icon" href="/static/ico_192.png">
+
+    <!-- Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+
+    <title>MotoDiag - Обслуживание</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/index.css">
+
+    <style>
+        .user-avatar-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .user-avatar-large {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+
+        .user-avatar {
+             width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: linear-gradient(45deg, var(--accent-purple), var(--accent-cyan));
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">MotoDiag</div>
+                
+                <!-- Burger Menu Button (Mobile) -->
+                <div class="burger-menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                
+                <!-- Desktop Navigation -->
+                <nav>
+                    <ul>
+                        <li><a href="/index">Главная</a></li>
+                        <li><a href="/my_moto">Мои мотоциклы</a></li>
+                        <li><a href="/maintenance" class="active">Обслуживание</a></li>
+                        <li><a href="#">Статистика</a></li>
+                        <li><a href="/articles">База знаний</a></li>
+                    </ul>
+                </nav>
+                
+                <div>
+                    <a href="/profile" style="text-decoration: none;">
+                        {% if user.image %}
+                        <img src="{{ url_for('user_image', user_id=user.id )}}" class="user-avatar">
+                        {% else %}
+                        <img src="/static/image/profile_default.jpg" alt="" class="user-avatar">
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu (Hidden by default) -->
+        <div class="mobile-menu">
+            <ul>
+                <li><a href="/index">Главная</a></li>
+                <li><a href="/my_moto">Мои мотоциклы</a></li>
+                <li><a href="/maintenance" class="active">Обслуживание</a></li>
+                <li><a href="#">Статистика</a></li>
+                <li><a href="/articles">База знаний</a></li>
+            </ul>
+        </div>
+        
+        <!-- Overlay (Hidden by default) -->
+        <div class="overlay"></div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <!-- Заголовок и фильтры -->
+            <section class="section-header">
+                <h1 class="page-title">Обслуживание</h1>
+                <div class="filters">
+                    <select class="filter-select">
+                        <option value="all">Все мотоциклы</option>
+                        {% for moto in moto_data %}
+                        <option value="{{ moto.id }}">{{ moto.model }}</option>
+                        {% endfor %}
+                    </select>
+                    <select class="filter-select">
+                        <option value="all">Все типы работ</option>
+                        <option value="oil">Замена масла</option>
+                        <option value="filter">Фильтры</option>
+                        <option value="brakes">Тормоза</option>
+                        <option value="chain">Цепь/ремень/кардан</option>
+                        <option value="tires">Шины</option>
+                    </select>
+                </div>
+            </section>
+
+            <!-- Предстоящее обслуживание -->
+            <section class="maintenance-section">
+                <h2 class="section-title">Предстоящее обслуживание</h2>
+                <div class="maintenance-list">
+                    {% for item in upcoming_maintenance %}
+                    <div class="maintenance-item {% if item.remaining_km < 0 %}minus{% endif %}" 
+                        data-moto-id="{{ item.moto_id }}" 
+                        data-service-type="{{ item.name }}">
+                        <div class="maintenance-info">
+                            <h4>{{ item.name }}</h4>
+                            <p>{{ item.moto_model }} • {{ item.interval }}</p>
+                        </div>
+                        <div class="maintenance-date">
+                            <div class="date">{% if item.remaining_km < 0 %}Просрочено на {{ item.remaining_km * -1 }} км {% else %}Через {{ item.remaining_km }} км{% endif %}</div>
+                            <div class="remaining">~{% if item.remaining_km < 0 %} {{ item.remaining_days * -1}} дней {% else %}{{ item.remaining_days }} дней{% endif %}</div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="no-maintenance">
+                        <p>Нет предстоящего обслуживания</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="update-mileage">
+                <h2 class="section-title">Обновление пробега</h2>
+                <div class="form-mileage">
+                    <form id="mileageForm" class="mileage-form">
+                        <div class="form-group">
+                            <label for="motoSelectMileage">Мотоцикл</label>
+                            <select name="moto_id" id="motoSelectMileage">
+                                <option value="">Выберите мотоцикл</option>
+                                {% for moto in moto_data %}
+                                <option value="{{ moto.id }}">{{moto.model}} ({{moto.mileage}} км)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="newMileage">Новый пробег (км)</label>
+                            <input type="number" name="new_mileage" id="newMileage" min="0" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="mileageDate">Дата обновления</label>
+                            <input type="date" name="mileage_date" id="mileageDate" required>
+                        </div>
+
+                        <button type="submit" class="btn">Обновить пробег</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Быстрое добавление -->
+            <section class="quick-add-section">
+                <h2 class="section-title">Быстрое добавление</h2>
+                <div class="quick-add-grid" data-service-type="Замена масляного фильтра">
+                    <button class="quick-add-btn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 8V16M8 12H16" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Замена масляного фильтра
+                    </button>
+                    <button class="quick-add-btn" data-service-type="Замена воздушного фильтра">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 16V8M8 12H16" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Замена воздушного фильтра
+                    </button>
+                    <button class="quick-add-btn" data-service-type="Замена свечей зажигания">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 16V8M8 12H16" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Замена свечей зажигания
+                    </button>
+                    <button class="quick-add-btn" data-service-type="Замена тормозной жидкости">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 8V16M8 12H16" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Замена тормозной жидкости
+                    </button>
+                    <button class="quick-add-btn" data-service-type="Смазка цепи">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 8V16M8 12H16" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Смазка цепи
+                    </button>
+                    <button class="quick-add-btn" data-service-type="Замена цепи">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 8V16M8 12H16" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Замена цепи
+                    </button>
+                    <button class="quick-add-btn" data-service-type="Замена ремня">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 8V16M8 12H16" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Замена ремня
+                    </button>
+                    <button class="quick-add-btn" data-service-type="Замена масла в кардане">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 8V16M8 12H16" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Замена масла в кардане
+                    </button>
+                    <button class="quick-add-btn" data-service-type="Замена шин">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 8V16M8 12H16" stroke="#7D3CFF" st  roke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Замена шин
+                    </button>
+                </div>
+            </section>
+
+            <!-- История обслуживания -->
+            <section class="history-section">
+                <h2 class="section-title">История обслуживания</h2>
+                <div class="history-list">
+                    {% for record in maintenance_history %}
+                    <div class="history-item">
+                        <div class="history-main">
+                            <div class="history-icon">
+                                {% if record.type == 'oil' %}
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21Z" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                {% elif record.type == 'filter' %}
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M22 12H2M5 12L5 19M19 12V19M12 12V19" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                {% else %}
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#7D3CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                {% endif %}
+                            </div>
+                            <div class="history-details">
+                                <h4>{{ record.title }}</h4>
+                                <p>{{ record.moto_model }} • {{ record.date.strftime('%d.%m.%Y') }} •  {{ record.notes }}</p>
+                            </div>
+                        </div>
+                        <div class="history-meta">
+                            <div class="text-meta" style="flex-direction: column;">
+                                <span class="mileage">{{ record.type }}</span>
+                                <span class="mileage">{{ record.mileage }} км</span>
+                                <span class="cost">{{ record.cost }} ₽</span>
+                            </div>
+                            {% if record.image %}
+                            <img src="{{ url_for('maintenance_image', maintenance_id=record.id) }}" class="bike-list-image">
+                            {% else %}
+                            <img src="/static/image/tools.png" class="bike-list-image">
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="no-history">
+                        <p>История обслуживания пуста</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="copyright">© 2025 MotoDiag. Все права защищены.</div>
+                <div class="footer-links">
+                    <a href="#">Политика конфиденциальности</a>
+                    <a href="#">Условия использования</a>
+                    <a href="#">Контакты</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Модальное окно добавления обслуживания -->
+    <div class="modal-overlay" id="serviceModal" style="display: none;">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Добавить обслуживание</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="serviceForm" class="modal-form">
+                <input type="hidden" id="serviceType" name="service_type">
+                
+                <div class="form-group">
+                    <label for="motoSelect">Мотоцикл</label>
+                    <select id="motoSelect" name="moto_id" required>
+                        <option value="">Выберите мотоцикл</option>
+                        {% for moto in moto_data %}
+                        <option value="{{ moto.id }}">{{ moto.model }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="mileage">Пробег (км)</label>
+                    <input type="number" id="mileage" name="mileage" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="date">Дата</label>
+                    <input type="date" id="date" name="date" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cost">Стоимость (₽)</label>
+                    <input type="number" id="cost" name="cost" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">Примечания</label>
+                    <textarea id="notes" name="notes" rows="3"></textarea>
+                </div>
+
+                <!-- Добавленный блок для загрузки фото -->
+                <div class="form-group">
+                    <label>Фото работы</label>
+                    <div class="photo-upload" id="photoUploadArea">
+                        <div class="photo-upload-icon">📷</div>
+                        <div class="photo-upload-text">Добавить фото</div>
+                        <div class="photo-upload-hint">Нажмите для загрузки (макс. 2 МБ)</div>
+                    </div>
+                    <input type="file" id="photoInput" name="meintenance_image" accept="image/*" style="display: none;">
+                    <img src="" alt="Предпросмотр" class="preview-photo" id="photoPreview">
+                    <div id="photoError" style="color: red; display: none; margin-top: 5px;"></div>
+                </div>
+                
+                <button type="submit" class="btn">Сохранить</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/burger-menu.js"></script>
+    <script>
+        // Получаем данные о мотоциклах и их типах привода
+    const motoData = [
+        {% for moto in moto_data %}
+        {
+            id: "{{ moto.id }}",
+            model: "{{ moto.model }}",
+            drive_type: "{{ moto.drive_type }}"
+        },
+        {% endfor %}
+    ];
+
+    // Сопоставление типов обслуживания с типами привода
+    const serviceToDriveType = {
+        'Смазка цепи': 'chain',
+        'Замена цепи': 'chain',
+        'Замена ремня': 'belt',
+        'Замена масла в кардане': 'shaft',
+        'Обслуживание кардана': 'shaft'
+    };
+
+    // Открытие модального окна с фильтрацией
+    document.querySelectorAll('.quick-add-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const serviceType = this.textContent.trim();
+            document.getElementById('serviceType').value = serviceType;
+            
+            // Получаем нужный тип привода для этого обслуживания
+            const requiredDriveType = serviceToDriveType[serviceType];
+            
+            // Фильтруем список мотоциклов
+            const motoSelect = document.getElementById('motoSelect');
+            motoSelect.innerHTML = '<option value="">Выберите мотоцикл</option>';
+            
+            motoData.forEach(moto => {
+                // Если это обслуживание не связано с приводом или тип привода совпадает
+                if (!requiredDriveType || moto.drive_type === requiredDriveType) {
+                    const option = document.createElement('option');
+                    option.value = moto.id;
+                    option.textContent = moto.model;
+                    motoSelect.appendChild(option);
+                }
+            });
+            
+            document.getElementById('serviceModal').style.display = 'flex';
+        });
+    });
+        
+        // Закрытие модального окна
+        document.querySelector('.close-modal').addEventListener('click', function() {
+            document.getElementById('serviceModal').style.display = 'none';
+        });
+        
+        // Закрытие при клике вне окна
+        document.querySelector('.modal-overlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+            }
+        });
+        
+        // Отправка формы
+        document.getElementById('serviceForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch('/add_maintenance', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token() }}' // Добавляем CSRF токен
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(result.message);
+                    document.getElementById('serviceModal').style.display = 'none';
+                    this.reset();
+                    // Обновляем страницу или добавляем запись динамически
+                    location.reload();
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                alert('Ошибка при отправке данных');
+                console.error(error);
+            }
+        });
+
+
+        // Обработка формы обновления пробега
+        document.getElementById('mileageForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = {
+                moto_id: formData.get('moto_id'),
+                new_mileage: formData.get('new_mileage'),
+                mileage_date: formData.get('mileage_date')
+            };
+            
+            try {
+                const response = await fetch('/update_mileage', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(result.message);
+                    location.reload(); // Обновляем страницу
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                alert('Ошибка при обновлении пробега');
+                console.error(error);
+            }
+        });
+
+
+        //Обработчики для фильтра
+        document.querySelectorAll('.filter-select').forEach(select => {
+            select.addEventListener('change', function() {
+                filterMainenanceItems();
+            });
+        });
+
+        //Фильтрация элементов обслуживания
+        function filterMainenanceItems() {
+            const motoFilter = document.querySelector('.filter-select:nth-of-type(1)').value;
+            const typeFilter = document.querySelector('.filter-select:nth-of-type(2)').value;
+
+            const maintenanceItems = document.querySelectorAll('.maintenance-item:not(.no-maintenance)');
+
+            maintenanceItems.forEach(item => {
+                const motoId = item.dataset.motoId;
+                const serviceType = item.dataset.serviceType;
+
+                const motoMatch = motoFilter === 'all' || motoFilter === motoId;
+                const typeMatch = typeFilter === 'all' || serviceTypeMatches(serviceType, typeFilter);
+
+                if (motoMatch && typeMatch) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Функция для проверки соответствия типа обслуживания фильтру
+        function serviceTypeMatches(serviceType, filterValue) {
+            const typeMapping = {
+                'oil': ['Замена масляного фильтра'],
+                'filter': ['Замена воздушного фильтра'],
+                'brakes': ['Замена тормозной жидкости'],
+                'chain': ['Смазка цепи', 'Замена цепи', 'Замена ремня', 'Замена масла в кардане'],
+                'tires': ['Замена шин']
+            };
+            
+            if (filterValue in typeMapping) {
+                return typeMapping[filterValue].includes(serviceType);
+            }
+            return false;
+        }
+
+
+
+        // Обработка загрузки фото
+        const photoUploadArea = document.getElementById('photoUploadArea');
+        const photoInput = document.getElementById('photoInput');
+        const photoPreview = document.getElementById('photoPreview');
+        const photoError = document.getElementById('photoError');
+
+        // Клик по области загрузки
+        photoUploadArea.addEventListener('click', () => photoInput.click());
+
+        // Изменение выбранного файла
+        photoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            
+            if (!file) return;
+            
+            // Проверка размера файла (2 МБ)
+            if (file.size > 2 * 1024 * 1024) {
+                photoError.textContent = 'Файл слишком большой (макс. 2 МБ)';
+                photoError.style.display = 'block';
+                photoInput.value = '';
+                return;
+            }
+            
+            // Проверка типа файла
+            if (!file.type.match('image.*')) {
+                photoError.textContent = 'Пожалуйста, выберите изображение';
+                photoError.style.display = 'block';
+                photoInput.value = '';
+                return;
+            }
+            
+            photoError.style.display = 'none';
+            
+            // Показ превью
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                photoPreview.src = event.target.result;
+                photoPreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Валидация перед отправкой формы
+        document.getElementById('serviceForm').addEventListener('submit', function(e) {
+            const file = photoInput.files[0];
+            
+            if (file && file.size > 2 * 1024 * 1024) {
+                e.preventDefault();
+                photoError.textContent = 'Файл слишком большой (макс. 2 МБ)';
+                photoError.style.display = 'block';
+                return false;
+            }
+            
+            return true;
+        });
+    </script>
+</body>
+</html>
